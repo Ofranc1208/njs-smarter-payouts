@@ -184,33 +184,32 @@ const LumpSumCalculatorPage = () => {
         </div>
 
         <div className="mt-4">
-          {formData.payments.map((payment: Payment, index: number) => (
-            <div key={index} className="calculator-section border p-4 mb-4 rounded bg-light">
-              <h5 className="mb-3">Payment {index + 1}</h5>
-              <div className="mb-3">
-                <label htmlFor={`payment-${index}-amount`} className="form-label calculator-label">Payment Amount ($)</label>
-                <input
-                  id={`payment-${index}-amount`}
-                  type="text"
-                  inputMode="decimal"
-                  className={`form-control ${errors[`payment-${index}-amount`] ? 'is-invalid' : ''}`}
-                  value={payment.amount}
-                  onChange={(e) => {
-                    const rawValue = e.target.value;
-                    const filteredValue = rawValue
-                      .replace(/[^\d.]/g, '')
-                      .replace(/^(\d*\.\d*).*/, '$1');
-
-                    const updated = [...formData.payments];
-                    updated[index].amount = filteredValue;
-                    setFormData({ ...formData, payments: updated });
-                  }}
-                />
-                {errors[`payment-${index}-amount`] && (
-                  <div className="invalid-feedback">{errors[`payment-${index}-amount`]}</div>
-                )}
-              </div>
-              <div>
+          {(Number(numberOfPayments) >= 1 && Number(numberOfPayments) <= 10) ? (
+            formData.payments.map((payment, index) => (
+              <div key={index} className="calculator-section border p-4 mb-4 rounded bg-light">
+                <h5 className="mb-3">Payment {index + 1}</h5>
+                <div className="mb-3">
+                  <label htmlFor={`payment-${index}-amount`} className="form-label calculator-label">Payment Amount ($)</label>
+                  <input
+                    id={`payment-${index}-amount`}
+                    type="text"
+                    inputMode="decimal"
+                    className={`form-control ${errors[`payment-${index}-amount`] ? 'is-invalid' : ''}`}
+                    value={payment.amount}
+                    onChange={(e) => {
+                      const rawValue = e.target.value;
+                      const filteredValue = rawValue
+                        .replace(/[^\d.]/g, '')
+                        .replace(/^(\d*\.\d{0,2}).*$/, '$1');
+                      const updated = [...formData.payments];
+                      updated[index].amount = filteredValue;
+                      setFormData({ ...formData, payments: updated });
+                    }}
+                  />
+                  {errors[`payment-${index}-amount`] && (
+                    <div className="invalid-feedback">{errors[`payment-${index}-amount`]}</div>
+                  )}
+                </div>
                 <label htmlFor={`payment-${index}-date`} className="form-label calculator-label">Payment Date</label>
                 <input
                   id={`payment-${index}-date`}
@@ -227,11 +226,17 @@ const LumpSumCalculatorPage = () => {
                   <div className="invalid-feedback">{errors[`payment-${index}-date`]}</div>
                 )}
               </div>
+            ))
+          ) : (
+            <div className="text-danger text-center my-3">
+              Please input up to 10 lump sum payments.
             </div>
-          ))}
+          )}
         </div>
 
-        {error && <p className="text-danger text-center mt-3">{error}</p>}
+        {(Number(numberOfPayments) >= 1 && Number(numberOfPayments) <= 10) && error && (
+          <p className="text-danger text-center mt-3">{error}</p>
+        )}
 
         <div className="text-center mt-4">
           <button className="btn btn-success btn-lg" onClick={handleLumpSumCalculate}>

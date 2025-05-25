@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { calcNPVWithAdjustment, calculateGuaranteedNPV } from '../utils/npvCalculations';
 import { FAMILY_PROTECTION_DISCOUNT_RATE } from '../utils/npvConfig';
 
@@ -69,6 +69,28 @@ export default function Step2LifeContingent({
   setCalculationResult
 }: Props) {
   const [answers, setAnswers] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    const originalViewport = document.querySelector('meta[name="viewport"]')?.getAttribute('content');
+    
+    const meta = document.querySelector('meta[name="viewport"]') || document.createElement('meta');
+    meta.setAttribute('name', 'viewport');
+    meta.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+    if (!document.querySelector('meta[name="viewport"]')) {
+      document.head.appendChild(meta);
+    }
+
+    document.body.style.overflowX = 'hidden';
+    document.body.style.maxWidth = '100vw';
+
+    return () => {
+      if (originalViewport) {
+        meta.setAttribute('content', originalViewport);
+      }
+      document.body.style.overflowX = '';
+      document.body.style.maxWidth = '';
+    };
+  }, []);
 
   const handleSelect = (groupKey: string, itemKey: string) => {
     const updated = { ...answers, [groupKey]: itemKey };
@@ -144,7 +166,14 @@ export default function Step2LifeContingent({
   };
 
   return (
-    <main className="calculator-page">
+    <main 
+      className="calculator-page"
+      style={{
+        overflowX: 'hidden',
+        maxWidth: '100%',
+        position: 'relative'
+      }}
+    >
       <div className="calculator">
         <h2 className="text-center mb-4">Life Contingent Profile</h2>
 

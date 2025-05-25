@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, ChangeEvent } from 'react';
+import React, { useState, useEffect, ChangeEvent, useRef } from 'react';
 import '../../styles/UnlockModal.css';
 
 import { auth, db, RecaptchaVerifier } from '../utils/firebase';
@@ -19,13 +19,134 @@ const formatPhoneNumber = (digits: string): string => {
   }
 };
 
+// Add type declaration for WebOTP API
 declare global {
   interface Window {
     recaptchaVerifier?: RecaptchaVerifier | null;
+    OTPCredential?: any;
   }
 }
 
-const UnlockModal: React.FC = () => {
+interface UnlockModalProps {
+  onClose?: () => void;
+}
+
+// Add this new component for OTP input
+const OTPInput: React.FC<{
+  value: string;
+  onChange: (value: string) => void;
+  disabled?: boolean;
+}> = ({ value, onChange, disabled }) => {
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const [otp, setOtp] = useState<string[]>(value.split('').concat(Array(6 - value.length).fill('')));
+
+  // Handle WebOTP API
+  useEffect(() => {
+    if ('OTPCredential' in window) {
+      const abortController = new AbortController();
+      
+      // Type assertion for WebOTP API
+      (navigator.credentials as any).get({
+        otp: { transport: ['sms'] },
+        signal: abortController.signal
+      }).then((otp: any) => {
+        if (otp?.code) {
+          onChange(otp.code);
+        }
+      }).catch((err: any) => {
+        // Ignore abort errors
+        if (err.name !== 'AbortError') {
+          console.warn('WebOTP error:', err);
+        }
+      });
+
+      return () => abortController.abort();
+    }
+  }, [onChange]);
+
+  // Handle paste event
+  const handlePaste = (e: React.ClipboardEvent) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+    if (pastedData) {
+      onChange(pastedData);
+      // Focus the next empty input or the last one
+      const nextIndex = Math.min(pastedData.length, 5);
+      inputRefs.current[nextIndex]?.focus();
+    }
+  };
+
+  // Handle individual input changes
+  const handleChange = (index: number, newValue: string) => {
+    if (newValue.length > 1) {
+      // Handle paste in individual input
+      const pastedValue = newValue.replace(/\D/g, '').slice(0, 6);
+      onChange(pastedValue);
+      return;
+    }
+
+    const newOtp = [...otp];
+    newOtp[index] = newValue.replace(/\D/g, '');
+    setOtp(newOtp);
+    onChange(newOtp.join(''));
+
+    // Auto-focus next input
+    if (newValue && index < 5) {
+      inputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  // Handle keydown for backspace
+  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace' && !otp[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  return (
+    <div 
+      className="otp-input-container"
+      style={{
+        display: 'flex',
+        gap: '8px',
+        justifyContent: 'center',
+        margin: '1rem 0'
+      }}
+    >
+      {Array.from({ length: 6 }).map((_, index) => (
+        <input
+          key={index}
+          ref={(el: HTMLInputElement | null) => {
+            inputRefs.current[index] = el;
+          }}
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          maxLength={6}
+          value={otp[index] || ''}
+          onChange={e => handleChange(index, e.target.value)}
+          onKeyDown={e => handleKeyDown(index, e)}
+          onPaste={handlePaste}
+          disabled={disabled}
+          style={{
+            width: '40px',
+            height: '48px',
+            textAlign: 'center',
+            fontSize: '1.25rem',
+            fontWeight: '600',
+            border: '2px solid #dee2e6',
+            borderRadius: '8px',
+            backgroundColor: disabled ? '#f8f9fa' : 'white',
+            transition: 'all 0.2s ease'
+          }}
+          onFocus={e => e.target.select()}
+        />
+      ))}
+    </div>
+  );
+};
+
+const UnlockModal: React.FC<UnlockModalProps> = ({ onClose }) => {
   const [phoneDigits, setPhoneDigits] = useState<string>('');
   const [otp, setOtp] = useState<string>('');
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
@@ -90,7 +211,8 @@ const UnlockModal: React.FC = () => {
     if (value.startsWith('1') && value.length === 11) {
       value = value.slice(1);
     }
-    setPhoneDigits(value.slice(0, 10));
+    value = value.slice(0, 10);
+    setPhoneDigits(value);
   };
 
   const handleSendCode = async () => {
@@ -154,7 +276,9 @@ const UnlockModal: React.FC = () => {
         timestamp: serverTimestamp()
       });
 
-      alert('✅ Phone verified!');
+      if (onClose) {
+        setTimeout(onClose, 1500);
+      }
     } catch (error: any) {
       console.error('❌ Invalid code:', error);
       let errorMessage = 'Invalid verification code. Try again.';
@@ -166,81 +290,161 @@ const UnlockModal: React.FC = () => {
     }
   };
 
+  // Scroll lock
+  useEffect(() => {
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, []);
+
   return (
     <>
       <div id="recaptcha-container"></div>
+      {/* Green-tinted, blurred overlay */}
+      <div
+        style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(34,180,85,0.18)', // subtle green
+          backdropFilter: 'blur(2px)',
+          WebkitBackdropFilter: 'blur(2px)',
+          zIndex: 1000,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <div
+          className="unlock-modal"
+          style={{
+            background: 'white',
+            borderRadius: '12px',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
+            maxWidth: '300px',
+            width: '100%',
+            padding: '2rem 1.5rem',
+            margin: 'auto',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            textAlign: 'center',
+            gap: '1.25rem',
+          }}
+        >
+          {step === 'phone' && (
+            <>
+              <img
+                src="https://cdn-icons-png.flaticon.com/512/2950/2950655.png"
+                className="unlock-image"
+                alt="lock icon"
+                width="48"
+                height="48"
+                style={{ marginBottom: '1rem' }}
+              />
+              <h2 className="unlock-title" style={{ marginBottom: '0.5rem' }}>
+                This offer is temporarily <span className="highlight">locked</span>.
+              </h2>
+              <p className="unlock-text" style={{ marginBottom: '0.5rem' }}>
+                Enter your phone number to unlock your personalized offer and get up to
+                <strong> $5,600 in bonus cash</strong> at closing.
+              </p>
+              <p className="unlock-text" style={{ marginBottom: '1rem' }}>
+                Your quote is reserved for 24 hours. Secure it below:
+              </p>
+              <input
+                type="tel"
+                placeholder="e.g. 561-568-3128"
+                value={formatPhoneNumber(phoneDigits)}
+                onChange={handleInputChange}
+                className="phone-input-field"
+                disabled={loading}
+                maxLength={12}
+                pattern="[0-9-]*"
+                inputMode="numeric"
+                style={{
+                  fontFamily: 'monospace',
+                  letterSpacing: '0.5px',
+                  width: '100%',
+                  textAlign: 'center',
+                  padding: '0.75rem',
+                  borderRadius: '6px',
+                  border: '1.5px solid #ccc',
+                  fontSize: '1.1rem',
+                  marginBottom: '0.5rem',
+                }}
+                onKeyPress={(e) => {
+                  if (!/[\d]/.test(e.key)) {
+                    e.preventDefault();
+                  }
+                }}
+                onPaste={(e) => {
+                  e.preventDefault();
+                  const pastedText = e.clipboardData.getData('text');
+                  const cleaned = pastedText.replace(/\D/g, '').slice(0, 10);
+                  setPhoneDigits(cleaned);
+                }}
+              />
+              {firebaseError && <div className="text-danger small mt-2" style={{ marginBottom: '0.75rem' }}>{firebaseError}</div>}
+              <button
+                onClick={handleSendCode}
+                disabled={loading}
+                className={loading ? 'loading' : ''}
+                style={{
+                  width: '100%',
+                  margin: '1rem 0 0 0',
+                  padding: '0.75rem',
+                  fontSize: '1.1rem',
+                  borderRadius: '6px',
+                  fontWeight: 600,
+                  background: '#22b455',
+                  color: 'white',
+                  border: 'none',
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  boxShadow: '0 2px 8px rgba(34,180,85,0.08)'
+                }}
+              >
+                {loading ? 'Sending...' : 'Send Code'}
+              </button>
+            </>
+          )}
 
-      <div className="unlock-modal">
-        {step === 'phone' && (
-          <>
-            <img
-              src="https://cdn-icons-png.flaticon.com/512/2950/2950655.png"
-              className="unlock-image"
-              alt="lock icon"
-              width="48"
-              height="48"
-            />
-            <h2 className="unlock-title">
-              This offer is temporarily <span className="highlight">locked</span>.
-            </h2>
-            <p className="unlock-text">
-              Enter your phone number to unlock your personalized offer and get up to
-              <strong> $5,600 in bonus cash</strong> at closing.
-            </p>
-            <p className="unlock-text">Your quote is reserved for 24 hours. Secure it below:</p>
+          {step === 'otp' && (
+            <>
+              <h2 className="unlock-title">Enter Verification Code</h2>
+              <p className="unlock-text">
+                We sent a 6-digit code to your phone.
+                <br />
+                <small className="text-muted">
+                  (Your browser may auto-fill this for you)
+                </small>
+              </p>
 
-            <input
-              type="tel"
-              placeholder="e.g. 5615831280"
-              value={phoneDigits}
-              onChange={handleInputChange}
-              className="phone-input-field"
-              disabled={loading}
-              maxLength={10}
-            />
-            {firebaseError && <div className="text-danger small mt-2">{firebaseError}</div>}
+              <OTPInput
+                value={otp}
+                onChange={setOtp}
+                disabled={loading}
+              />
+              {firebaseError && <div className="text-danger small mt-2">{firebaseError}</div>}
 
-            <button 
-              onClick={handleSendCode}
-              disabled={loading}
-              className={loading ? 'loading' : ''}
-            >
-              {loading ? 'Sending...' : 'Send Code'}
-            </button>
-          </>
-        )}
+              <button 
+                onClick={handleVerifyCode}
+                disabled={loading}
+                className={loading ? 'loading' : ''}
+              >
+                {loading ? 'Verifying...' : 'Verify'}
+              </button>
+            </>
+          )}
 
-        {step === 'otp' && (
-          <>
-            <h2 className="unlock-title">Enter Verification Code</h2>
-            <p className="unlock-text">We sent a 6-digit code to your phone.</p>
-
-            <input
-              type="text"
-              maxLength={6}
-              value={otp}
-              onChange={(e) => setOtp(e.target.value)}
-              placeholder="Enter 6-digit code"
-              disabled={loading}
-            />
-            {firebaseError && <div className="text-danger small mt-2">{firebaseError}</div>}
-
-            <button 
-              onClick={handleVerifyCode}
-              disabled={loading}
-              className={loading ? 'loading' : ''}
-            >
-              {loading ? 'Verifying...' : 'Verify'}
-            </button>
-          </>
-        )}
-
-        {step === 'success' && (
-          <>
-            <h2 className="unlock-title">🎉 Offer Unlocked!</h2>
-            <p className="unlock-text">Thank you! Your offer is now fully available.</p>
-          </>
-        )}
+          {step === 'success' && (
+            <>
+              <h2 className="unlock-title">🎉 Offer Unlocked!</h2>
+              <p className="unlock-text">Thank you! Your offer is now fully available.</p>
+            </>
+          )}
+        </div>
       </div>
     </>
   );

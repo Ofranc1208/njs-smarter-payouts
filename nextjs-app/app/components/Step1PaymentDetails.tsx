@@ -41,7 +41,15 @@ export default function Step1PaymentDetails({
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value;
-    if (value.length > 7) value = value.slice(0, 7);
+    // Remove all except digits and decimal
+    value = value.replace(/[^\d.]/g, '');
+    // Only allow one decimal point
+    const parts = value.split('.');
+    if (parts.length > 2) value = parts[0] + '.' + parts.slice(1).join('');
+    // Limit to two decimal places
+    if (parts[1]) value = parts[0] + '.' + parts[1].slice(0, 2);
+    // Remove leading zeros unless before decimal
+    value = value.replace(/^0+(?!\.|$)/, '');
     updateField('amount', value);
   };
 
@@ -186,13 +194,28 @@ export default function Step1PaymentDetails({
           </span>
         </label>
         <input
-          type="number"
+          type="text"
           min={100}
           max={1000000}
           step={1}
           value={amount}
           onChange={handleAmountChange}
           className={`form-control ${errors.amount ? 'is-invalid' : ''}`}
+          onKeyPress={e => {
+            // Allow only digits and one decimal point
+            if (!/[0-9.]/.test(e.key) || (e.key === '.' && amount.includes('.'))) {
+              e.preventDefault();
+            }
+          }}
+          onPaste={e => {
+            e.preventDefault();
+            let pasted = e.clipboardData.getData('text').replace(/[^\d.]/g, '');
+            const parts = pasted.split('.');
+            if (parts.length > 2) pasted = parts[0] + '.' + parts.slice(1).join('');
+            if (parts[1]) pasted = parts[0] + '.' + parts[1].slice(0, 2);
+            pasted = pasted.replace(/^0+(?!\.|$)/, '');
+            updateField('amount', pasted);
+          }}
         />
         {errors.amount && <div className="invalid-feedback">{errors.amount}</div>}
       </div>

@@ -85,7 +85,7 @@ export default function Step3OfferSheet({ calculationResult, formData, onBack }:
       <div className="bg-white rounded shadow-sm p-4 mx-auto" style={{ maxWidth: '500px' }}>
         <h2 className="offer-brand mb-3 text-success fw-bold">🎉 Congratulations</h2>
         <p className="offer-subtitle text-muted mb-4">
-          Here's your Early Payout offer based on the information provided.
+          Here's your Early Payout offer.
           <br />
           Funding available in as little as <strong>30 days</strong>.
         </p>
@@ -143,7 +143,7 @@ export default function Step3OfferSheet({ calculationResult, formData, onBack }:
         </div>
       </div>
 
-      {showModal && <UnlockModal />}
+      {showModal && <UnlockModal onClose={() => setShowModal(false)} />}
     </div>
   );
 }

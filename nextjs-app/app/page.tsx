@@ -65,17 +65,17 @@ export default function Home() {
           <h1 id="pulseText" className="fw-bold text-white display-5">
             Skip the Sales Pitch
           </h1>
-
+          <p></p>
           <h4 className="lead fs-4 fw-semibold text-light mt-3">
-          No calls. No wait. Instant results
+          Wonder your settlement’s early payout value?
           </h4>
-
+          <p></p>
           <p className="fs-5 text-light">
-            No pushy sales calls. No sensitive personal information required.
+          No personal info needed to see your quote.
           </p>
 
           <p className="fs-5 text-light mt-2">
-          You're in control — not the salesperson.
+          You're in control — not the sales team.
           </p>
 
           <div className="hero-buttons mt-4">
