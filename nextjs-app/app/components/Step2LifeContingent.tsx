@@ -73,7 +73,7 @@ export default function Step2LifeContingent({
   const handleSelect = (groupKey: string, itemKey: string) => {
     const updated = { ...answers, [groupKey]: itemKey };
     setAnswers(updated);
-    setFormData((prev) => ({ ...prev, lcpAnswers: Object.values(updated) }));
+    setFormData((prev: any) => ({ ...prev, lcpAnswers: Object.values(updated) }));
   };
 
   const handleCalculate = () => {
@@ -174,4 +174,3 @@ export default function Step2LifeContingent({
     </main>
   );
 }
-
