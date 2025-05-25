@@ -3,8 +3,8 @@
 import React, { useState, useEffect, ChangeEvent } from 'react';
 import '../../styles/UnlockModal.css';
 
-import { auth, db } from '../utils/firebase';
-import { signInWithPhoneNumber, ConfirmationResult, RecaptchaVerifier } from 'firebase/auth';
+import { auth, db, RecaptchaVerifier } from '../utils/firebase';
+import { signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 const formatPhoneNumber = (digits: string): string => {
@@ -55,14 +55,14 @@ const UnlockModal: React.FC = () => {
           return;
         } else {
           window.recaptchaVerifier = new RecaptchaVerifier(
+            auth,
             'recaptcha-container',
             {
               size: 'invisible',
               callback: (response: any) => {
                 console.log('✅ reCAPTCHA solved:', response);
               }
-            },
-            auth
+            }
           );
           await window.recaptchaVerifier.render();
           console.log('✅ reCAPTCHA initialized for non-localhost');
@@ -87,7 +87,6 @@ const UnlockModal: React.FC = () => {
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value.replace(/\D/g, '');
-    // Allow +1 at the start if user pastes it
     if (value.startsWith('1') && value.length === 11) {
       value = value.slice(1);
     }
