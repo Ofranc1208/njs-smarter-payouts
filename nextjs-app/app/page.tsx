@@ -67,7 +67,7 @@ export default function Home() {
           </h1>
           <p></p>
           <h4 className="lead fs-4 fw-semibold text-light mt-3">
-          Wonder your settlement’s early payout value?
+          Discover your settlement’s early payout value today.
           </h4>
           <p></p>
           <p className="fs-5 text-light">
