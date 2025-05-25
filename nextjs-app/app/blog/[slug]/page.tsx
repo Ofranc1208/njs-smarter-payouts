@@ -1,15 +1,13 @@
-import { Metadata } from 'next';
-
-type PageProps = {
+type BlogPostPageProps = {
   params: {
     slug: string;
   };
 };
 
-export default function BlogPost({ params }: PageProps) {
+export default function BlogPost({ params }: BlogPostPageProps) {
   const title = params.slug
     .split('-')
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');
 
   return (
