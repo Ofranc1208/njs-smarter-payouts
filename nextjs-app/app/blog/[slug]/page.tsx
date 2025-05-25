@@ -1,10 +1,12 @@
-type Props = {
+import { type Metadata } from 'next';
+
+export interface BlogPostPageProps {
   params: {
-    slug: string
-  }
+    slug: string;
+  };
 }
 
-export default function BlogPost({ params }: Props) {
+export default function BlogPost({ params }: BlogPostPageProps) {
   return (
     <div className="min-h-screen">
       <h1 className="text-4xl font-bold mb-6">
@@ -14,5 +16,5 @@ export default function BlogPost({ params }: Props) {
         This is a placeholder for the blog post content. The actual content will be migrated from the React version.
       </p>
     </div>
-  )
+  );
 } 
