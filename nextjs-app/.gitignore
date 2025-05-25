@@ -1,0 +1,17 @@
+# Node modules
+node_modules
+
+# Local env files
+.env.local
+
+# Build output
+.next
+
+# Logs
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# OS/macOS junk
+.DS_Store
+Thumbs.db

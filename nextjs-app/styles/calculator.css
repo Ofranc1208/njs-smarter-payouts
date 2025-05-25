@@ -1,0 +1,200 @@
+:root {
+  --color-primary: #09b44d;
+  --color-secondary: #fbc233;
+  --color-dark: #222;
+  --color-light: #f6f6f6;
+  --font-main: 'Inter', sans-serif;
+}
+
+/* ========= Layout & Typography ========= */
+.calculator {
+  background: #fff;
+  padding: 1.75rem;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+  max-width: 440px;
+  width: 100%;
+  margin: 0 auto;
+  font-family: var(--font-main);
+}
+
+.calculator h1,
+.calculator h2 {
+  font-size: 22px;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+/* ========= Labels ========= */
+.calculator-label {
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--color-dark);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.4rem;
+}
+
+.what-is-it-trigger {
+  font-size: 13px;
+  color: #0073e6;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.what-is-it-trigger:hover {
+  text-decoration: underline;
+}
+
+/* ========= Inputs ========= */
+.calculator input[type="number"],
+.calculator input[type="date"] {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+input.invalid {
+  border-color: red;
+  background-color: #ffecec;
+}
+
+/* ========= Button Groups ========= */
+.calculator-button-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.calculator-button-group button {
+  padding: 0.45rem 0.6rem;
+  font-size: 12.5px;
+  border-radius: 20px;
+  border: 1px solid #ccc;
+  background: #f9f9f9;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: center;
+  font-weight: 500;
+  height: 34px;
+  line-height: 1;
+}
+
+/* ========= Annual Increase Tweak ========= */
+.calculator-increase-button {
+  padding: 0.3rem 0.5rem !important;
+  font-size: 11.5px !important;
+  height: 32px !important;
+  border-radius: 18px;
+}
+
+/* ========= Selected Button Styles ========= */
+.calculator-button-group button.selected,
+.calculator-mode-button.selected-mode,
+.calculator-increase-button.selected-increase,
+.calculator-type-button.selected-type {
+  background-color: var(--color-primary);
+  color: #fff;
+  font-weight: 600;
+  border: none;
+}
+
+.calculator-type-button.selected-type {
+  background-color: var(--color-secondary);
+  color: #111;
+}
+
+/* ========= Main CTA ========= */
+button.btn-success {
+  background-color: var(--color-primary);
+  color: white;
+  font-weight: bold;
+  padding: 0.75rem;
+  font-size: 15px;
+  border-radius: 10px;
+  width: 100%;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  margin-top: 1rem;
+}
+
+button.btn-success:hover {
+  background-color: #079e44;
+}
+
+/* ========= Sections ========= */
+.calculator-section {
+  margin-bottom: 1.5rem;
+}
+
+/* ========= Error Handling ========= */
+.invalid-feedback {
+  color: red;
+  font-size: 12.5px;
+  margin-top: 4px;
+}
+
+/* ========= Tooltip Styling ========= */
+.what-is-it-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+}
+
+.what-is-it-box {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #fff;
+  border: 1px solid #ccc;
+  padding: 20px;
+  border-radius: 12px;
+  max-width: 420px;
+  width: 90%;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.15);
+  z-index: 1001;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: #333;
+}
+
+.what-is-it-box strong {
+  font-weight: bold;
+  color: #000;
+}
+
+/* ========= Responsive ========= */
+@media screen and (max-width: 480px) {
+  .calculator-button-group {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .calculator h1,
+  .calculator h2 {
+    font-size: 20px;
+  }
+}
+
+/* ========= Compact Button Overrides ========= */
+.calculator-button-group.small-button-group button {
+  padding: 0.3rem 0.5rem;
+  font-size: 11.5px;
+  height: 30px;
+  border-radius: 16px;
+}
+
+/* calculator.css - Add your calculator-specific styles here */ 
